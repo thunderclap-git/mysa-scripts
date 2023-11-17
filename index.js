@@ -36,6 +36,7 @@ const Selectors = {
   copyComponentSN: `[cc=sch-now]`,
   copyComponentGT: `[cc=get-touch]`,
   mainJDPopup: `[main-popup=jd-form]`,
+  staticPDF: `[${prefix2}=static-pdf]`,
 };
 
 const getElementRef = (target) => {
@@ -152,7 +153,7 @@ const setupListeners = () => {
     console.log("Final JD values", formValues);
     // const htmlDoc = getHtmlDocument();
 
-    downloadDisplayedJD(previewEle, formValues.about_company.split(0, 6));
+    downloadDisplayedJD(previewEle);
   });
 };
 // ----------- handlers ---------------------
@@ -231,6 +232,10 @@ const displayGeneratedJD = () => {
 };
 
 const downloadDisplayedJD = (content, filename = "sample") => {
+  const staticPdfEle = getElementRef(Selectors.staticPDF);
+  const clonePreview = previewEle.cloneNode(true);
+  staticPdfEle.appendChild(clonePreview);
+
   window.html2canvas = html2canvas;
   const doc = new window.jspdf.jsPDF({
     orientation: "p",
@@ -239,7 +244,7 @@ const downloadDisplayedJD = (content, filename = "sample") => {
 
   //htmlContent = content.innerHTML.replace(/\s/g, "&nbsp;");
 
-  doc.html(content, {
+  doc.html(staticPdfEle, {
     callback: function (pdf) {
       pdf.save(`jd_FC_${formValues.company_name}.pdf`);
     },
@@ -263,7 +268,7 @@ const getHtmlDocument = () => {
 
 const cloneJDButton = () => {
   const pathname = window.location.pathname;
-  console.log("Clone...", pathname);
+  // console.log("Clone...", pathname);
   if (pathname.includes("the-financial-controller-you-didnt-know-you-needed")) {
     const targetDivJD = getElementRef(Selectors.dynamicEmbedJD);
     const targetDivSN = getElementRef(Selectors.dynamicEmbedSN);
@@ -292,6 +297,13 @@ const hidePopup = () => {
     mainPopupEle.style.display = "none";
   }
 };
+
+const closeButton = getElementRef("[popup-item=close-btn]");
+closeButton.addEventListener("click", (e) => {
+  console.log("CLosed");
+  //resetWebflow();
+  location.reload(true);
+});
 
 window.addEventListener("load", (ev) => {
   // resetWebflow();
