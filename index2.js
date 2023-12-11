@@ -15,6 +15,7 @@ const Selectors = {
   website: `[${prefix}=website]`,
   about: `[${prefix}=about-company]`,
   submitBtn: `[${prefix}=submit-btn]`,
+  formEle: `[${prefix}=form-wrapper]`,
   previewBtn: `[${prefix}=preview-btn]`,
   preview: `[page-item=pdf-preview]`,
   logo: `[${prefix2}=logo]`,
@@ -27,15 +28,15 @@ const Selectors = {
   jdFooterText: `[${prefix2}=footer-email]`,
   jdFooterCompanyName: `[${prefix2}=footer-companyName]`,
   jdRoleDescription: `[${prefix2}=role-description]`,
-  popupTitle: `[popup-item=title]`,
-  popupContent: `[popup-item=content]`,
-  dynamicEmbedJD: `[dynamic-embed=jd-gen-component]`,
-  dynamicEmbedSN: `[dynamic-embed=sch-now-component]`,
-  dynamicEmbedGT: `[dynamic-embed=fc-lead-component]`,
-  copyComponentJD: `[cc=customize-jd]`,
-  copyComponentSN: `[cc=sch-now]`,
-  copyComponentGT: `[cc=get-touch]`,
-  mainJDPopup: `[main-popup=jd-form]`,
+  //popupTitle: `[popup-item=title]`,
+  //popupContent: `[popup-item=content]`,
+  //dynamicEmbedJD: `[dynamic-embed=jd-gen-component]`,
+  //dynamicEmbedSN: `[dynamic-embed=sch-now-component]`,
+  //dynamicEmbedGT: `[dynamic-embed=fc-lead-component]`,
+  // copyComponentJD: `[cc=customize-jd]`,
+  // copyComponentSN: `[cc=sch-now]`,
+  // copyComponentGT: `[cc=get-touch]`,
+  // mainJDPopup: `[main-popup=jd-form]`,
   staticPDF: `[${prefix2}=static-pdf]`,
 };
 
@@ -49,7 +50,7 @@ let formValues = {
   location: "",
   company_email: "",
   website: "",
-  about_company: "",
+  //  about_company: "",
 };
 
 let imageUploadEle;
@@ -66,11 +67,12 @@ const previewLogoEle = getElementRef(Selectors.logo);
 const jobRoleEle = getElementRef(Selectors.jobRole);
 const jobLocationEle = getElementRef(Selectors.jobLocation);
 const imageErrorMsgEle = getElementRef(Selectors.logoErrorLabel);
+const formSubmitEle = getElementRef(Selectors.formEle);
 
 const jobTitleEle = getElementRef(Selectors.jobTitle);
 //const jobDescEle = getElementRef(Selectors.jobDesc);
-const popupTitleEle = getElementRef(Selectors.popupTitle);
-const popupContentEle = getElementRef(Selectors.popupContent);
+//const popupTitleEle = getElementRef(Selectors.popupTitle);
+//const popupContentEle = getElementRef(Selectors.popupContent);
 const logoUploadedEle = getElementRef(Selectors.logoUploaded);
 const logoNameEle = getElementRef(Selectors.logoName);
 //const logowebsiteEle = getElementRef(Selectors.logoWebsite);
@@ -95,6 +97,7 @@ const createHiddenInputEle = () => {
   //logo upload
   imageUploadEle?.addEventListener("change", (e) => {
     handleFiles(e.target.files);
+    formValues.logo = e.target.files;
   });
 };
 
@@ -117,16 +120,21 @@ const setupListeners = () => {
     formValues.company_name = e.target.value;
     // const finalRole = `Finance Controller at ${e.target.value}`;
     jobRoleEle.innerText = ` @ ${e.target.value}`;
+    displayGeneratedJD();
+    checkFormValues();
   });
 
   //company email
   companyEmailEle.addEventListener("change", (e) => {
     formValues.company_email = e.target.value;
+    displayGeneratedJD();
+    checkFormValues();
   });
 
   companyLocationEle.addEventListener("change", (e) => {
     formValues.location = e.target.value;
     jobLocationEle.innerText = e.target.value;
+    checkFormValues();
   });
   //company website
   websiteEle.addEventListener("change", (e) => {
@@ -134,23 +142,53 @@ const setupListeners = () => {
     //logowebsiteEle.innerText = e.target.value;
     const title = `Background (${e.target.value})`;
     jobTitleEle.innerText = title;
+    checkFormValues();
   });
 
   //company description
   aboutEle.addEventListener("change", (e) => {
     formValues.about_company = e.target.value;
     jobAboutEle.innerText = e.target.value;
+    checkFormValues();
   });
 
   submitBtnEle.addEventListener("click", (e) => {
-    console.log("What happened");
-    //e.preventDefault();
+    console.log("submitted", formValues);
+    if (formValues.logo === "" || !formValues.logo.length) {
+      console.log("inside");
+      alert("please upload company logo.");
+      e.preventDefault();
+      return;
+    }
+
+    for (let value of Object.values(formValues)) {
+      if (value === "" || !value.length) {
+        // e.preventDefault();
+        return;
+      }
+    }
+
+    setTimeout(() => {
+      resetForm();
+    }, 1800);
+
+    downloadDisplayedJD();
+  });
+
+  /*  formSubmitEle.addEventListener("submit", (e) => {
+    console.log("submitted", formValues);
+    if (formValues.logo === "" || !formValues.logo.length) {
+      console.log("inside");
+      alert("please upload company logo.");
+      e.preventDefault();
+      return;
+    }
     setTimeout(() => {
       resetForm();
     }, 1500);
-    displayGeneratedJD();
+
     downloadDisplayedJD();
-  });
+  }); */
 
   /*  previewBtnEle.addEventListener("click", (e) => {
          e.preventDefault();
@@ -204,6 +242,7 @@ const handleFiles = (uploaded_files) => {
       imageErrorMsgEle.innerText = "The image's width & height must be 100px";
     }
 
+    checkFormValues();
     //  URL.revokeObjectURL(objectURL);
     return;
   };
@@ -238,7 +277,7 @@ const displayGeneratedJD = () => {
     /\[#startup_name\]/g,
     formValues.company_name
   );
-  console.log("updated text", { ogText, updatedText });
+  // console.log("updated text", { ogText, updatedText });
   jdRoleDescriptionEle.innerText = updatedText;
 
   //console.log("company name", modifiedText);
@@ -251,6 +290,11 @@ const displayGeneratedJD = () => {
 
 const downloadDisplayedJD = (content, filename = "sample") => {
   const staticPdfEle = getElementRef(Selectors.staticPDF);
+  if (staticPdfEle.hasChildNodes()) {
+    while (staticPdfEle.firstChild) {
+      staticPdfEle.removeChild(staticPdfEle.firstChild);
+    }
+  }
   const clonePreview = previewEle.cloneNode(true);
   staticPdfEle.appendChild(clonePreview);
 
@@ -290,9 +334,34 @@ const downloadDisplayedJD = (content, filename = "sample") => {
   });
 };
 
+const checkFormValues = () => {
+  let allValid = true;
+  for (let value of Object.values(formValues)) {
+    if (value === "" || !value.length) {
+      allValid = false;
+    }
+  }
+  if (allValid) {
+    enableSubmitButton();
+  } else {
+    disableSubmitButton();
+  }
+};
+
+const enableSubmitButton = () => {
+  submitBtnEle.removeAttribute("disabled");
+  submitBtnEle.classList.remove("is-disabled");
+};
+
+const disableSubmitButton = () => {
+  submitBtnEle.setAttribute("disabled", "");
+  submitBtnEle.classList.add("is-disabled");
+};
+
 window.addEventListener("load", (ev) => {
   // resetWebflow();
   createHiddenInputEle();
+  submitBtnEle.setAttribute("disabled", "");
   //cloneJDButton();
   // hidePopup();
   setTimeout(() => {
